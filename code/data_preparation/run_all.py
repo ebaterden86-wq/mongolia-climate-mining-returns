@@ -1,4 +1,4 @@
-"""Run Mission 1 locally with Python 3.11+ and pandas, NumPy and openpyxl.
+"""Run data preparation locally with Python 3.11+ and pandas, NumPy and openpyxl.
 
 From the project directory: python Code/run_all.py
 The runner resolves paths from its own location and needs no network access.
@@ -106,7 +106,7 @@ def run():
     for folder in ("Cleaned", "Final"):
         (root / folder).mkdir(exist_ok=True)
     sections = [
-        "SSRN MINING CLIMATE RESEARCH\nMission 1 | Data preparation, audit and completion report",
+        "SSRN MINING CLIMATE RESEARCH\nData Preparation | Audit and completion report",
         "Study period: 2018-01 to 2025-12 inclusive. Climate reference period: 1991–2020.\n"
         "Missing cells are blank. All financial and master commodity returns are decimals (0.10 = 10%).\n"
         "Climate precipitation percentage anomalies and the explicit cleaned commodity percentage "

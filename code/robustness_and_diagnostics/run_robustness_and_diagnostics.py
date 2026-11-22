@@ -131,22 +131,22 @@ def fit_controlled(frame):
 def replication_check(firm, fit, prior):
     _, n, first, max_month, rounded = FIRMS[firm]
     if (fit["n"], fit["first"], fit["last"], fit["max_cooks_month"]) != (n, first, "2025-12", max_month):
-        raise ValueError(f"{firm} sample or most influential month differs from Mission 2: {fit}")
+        raise ValueError(f"{firm} sample or most influential month differs from exploratory analysis: {fit}")
     if fit["calendar"] != {"chronological": True, "unique": True, "missing_inside": []}:
-        raise ValueError(f"{firm} primary calendar differs from Mission 2.")
+        raise ValueError(f"{firm} primary calendar differs from exploratory analysis.")
     metrics = [fit["terms"][name]["estimate"] for name in TERMS[1:]] + [fit["r2"], fit["climate_joint_p"]]
     rendered = tuple(round(value, digits) for value, digits in zip(metrics, (2, 2, 2, 2, 3, 3)))
     if rendered != rounded:
         raise ValueError(f"{firm} brief targets {rounded} differ from replicated values {rendered}.")
     if fit["included_months"] != prior["included_months"] or prior["n"] != n:
-        raise ValueError(f"{firm} exact Mission 2 sample month membership differs.")
+        raise ValueError(f"{firm} exact exploratory analysis sample month membership differs.")
     fields = ("r2", "adjusted_r2", "climate_joint_wald_chi2_df2", "climate_joint_p", "max_cooks_distance")
     deltas = {key: abs(fit[key] - prior[key]) for key in fields}
     for term in TERMS:
         for field, value in fit["terms"][term].items():
             deltas[f"{term}.{field}"] = abs(value - prior["terms"][term][field])
     if not all(value <= TOLERANCE for value in deltas.values()):
-        raise ValueError(f"{firm} Mission 2 numeric discrepancy: {deltas}")
+        raise ValueError(f"{firm} exploratory analysis numeric discrepancy: {deltas}")
     return {"status": "PASS", "rounded_brief_targets_match": True,
             "exact_json_tolerance": TOLERANCE, "max_abs_difference": max(deltas.values()),
             "numeric_comparisons": len(deltas)}
@@ -225,7 +225,7 @@ def analyze(workbook, reference, note, script):
     hashes = {path.name: sha256(path) for path in inputs}
     original = json.loads(reference.read_text(encoding="utf-8"))
     if hashes[workbook.name] != original["input_sha256"]:
-        raise ValueError("Workbook SHA-256 differs from the Mission 2 input recorded in its JSON.")
+        raise ValueError("Workbook SHA-256 differs from the exploratory analysis input recorded in its JSON.")
     samples = read_samples(workbook)
     firms = {}
     arrays = {}
@@ -358,7 +358,7 @@ def write_workbook(results, path):
 
     workbook = Workbook()
     workbook.remove(workbook.active)
-    workbook.properties.title = "Mission 3 | Final robustness and diagnostics"
+    workbook.properties.title = "Robustness and Diagnostics"
     for panel in results["tables"]:
         sheet = workbook.create_sheet(panel["name"])
         sheet.sheet_view.showGridLines = False
@@ -433,20 +433,20 @@ PDF_LINE = colors.HexColor("#B8CCCF")
 PDF_FILL = colors.HexColor("#EDF5F4")
 PDF_PUNCTUATION = str.maketrans({"–": "-", "—": "-", "’": "'"})
 PDF_STYLES = {
-    "title": ParagraphStyle("Mission 3 Title", fontName="Times-Bold", fontSize=26,
+    "title": ParagraphStyle("robustness and diagnostics Title", fontName="Times-Bold", fontSize=26,
                             leading=27, spaceAfter=8, textColor=PDF_INK),
-    "sub": ParagraphStyle("Mission 3 Subtitle", fontName="Helvetica", fontSize=9.6,
+    "sub": ParagraphStyle("robustness and diagnostics Subtitle", fontName="Helvetica", fontSize=9.6,
                           leading=12.5, spaceAfter=12, textColor=PDF_MUTED),
-    "section": ParagraphStyle("Mission 3 Section", fontName="Helvetica-Bold", fontSize=11.5,
+    "section": ParagraphStyle("robustness and diagnostics Section", fontName="Helvetica-Bold", fontSize=11.5,
                               leading=14, spaceBefore=9, spaceAfter=4,
                               keepWithNext=True, textColor=PDF_ACCENT),
-    "body": ParagraphStyle("Mission 3 Body", fontName="Helvetica", fontSize=9.7,
+    "body": ParagraphStyle("robustness and diagnostics Body", fontName="Helvetica", fontSize=9.7,
                            leading=12.8, spaceAfter=5.5, textColor=PDF_INK),
-    "note": ParagraphStyle("Mission 3 Table Note", fontName="Helvetica", fontSize=8.2,
+    "note": ParagraphStyle("robustness and diagnostics Table Note", fontName="Helvetica", fontSize=8.2,
                            leading=10.8, spaceBefore=5, spaceAfter=4, textColor=PDF_MUTED),
-    "table_text": ParagraphStyle("Mission 3 Table Text", fontName="Helvetica", fontSize=8.7,
+    "table_text": ParagraphStyle("robustness and diagnostics Table Text", fontName="Helvetica", fontSize=8.7,
                                  leading=10.8, textColor=PDF_INK, alignment=TA_LEFT),
-    "table_value": ParagraphStyle("Mission 3 Table Numeric", fontName="Helvetica", fontSize=8.7,
+    "table_value": ParagraphStyle("robustness and diagnostics Table Numeric", fontName="Helvetica", fontSize=8.7,
                                   leading=10.8, textColor=PDF_INK, alignment=TA_RIGHT),
 }
 
@@ -598,10 +598,10 @@ def write_pdf(results, path):
         _pdf_paragraph(
             "Complete-case samples run February 2018 to December 2025 for MMC and June 2018 to December 2025 for "
             "Steppe Gold. Inference uses Newey-West HAC with a Bartlett kernel, three monthly lags, and the "
-            "Mission 2 scale correction n/(n - k), where k includes the intercept."),
+            "exploratory analysis scale correction n/(n - k), where k includes the intercept."),
         _pdf_paragraph("Table 1. Replicated controlled regressions", "section"),
         _pdf_baseline_table(firms),
-        _pdf_paragraph("Both models match the numerical Mission 2 output to within 1e-10. The joint Wald test "
+        _pdf_paragraph("Both models match the numerical exploratory analysis output to within 1e-10. The joint Wald test "
                        "sets both climate coefficients to zero and uses a chi-square reference with two degrees of freedom.", "note"),
         _pdf_paragraph("Table 2. One-month influence sensitivity", "section"),
         _pdf_influence_table(firms),
@@ -635,7 +635,7 @@ def write_pdf(results, path):
         _pdf_paragraph("Specification assessment", "section"),
         _pdf_paragraph(
             "The short samples leave substantial uncertainty. Read individual p-values alongside confidence "
-            "intervals, joint tests and Mission 2's Holm adjustment across firms. Diagnostics have limited power."),
+            "intervals, joint tests and exploratory analysis's Holm adjustment across firms. Diagnostics have limited power."),
         _pdf_paragraph(
             "The same-month models estimate conditional associations. Australian thermal coal is an imperfect "
             "proxy for MMC's coking-coal exposure. The coal series switched from spot to futures in February 2022 "
@@ -647,7 +647,7 @@ def write_pdf(results, path):
             "The evidence supports an exploratory manuscript about conditional associations. Identifying causal "
             "effects or establishing climate risk pricing would require a different research design."),
         _pdf_paragraph(
-            "Inputs are the Mission 1 master workbook and Mission 2 model outputs. "
+            "Inputs are the prepared master workbook and exploratory model outputs. "
             "Inference reference: Newey, W. K. and West, K. D. (1987), <i>Econometrica</i> 55(3), 703-708. "
             '<link href="https://doi.org/10.2307/1913610" color="#1B565D">doi:10.2307/1913610</link>.', "note"),
     ]
@@ -658,20 +658,35 @@ def write_pdf(results, path):
     document.build(story, onFirstPage=_pdf_footer, onLaterPages=_pdf_footer)
 
 
+def exploratory_inputs(directory):
+    current = tuple(directory / name for name in (
+        "exploratory_analysis_results.json", "exploratory_analysis_research_note.pdf", "run_exploratory_analysis.py",
+    ))
+    if all(path.is_file() for path in current):
+        return current
+    # Older private archives remain usable as a complete set, with their original fingerprints.
+    archived = tuple(directory / name for name in (
+        "Mission_2_Results.json", "Mission_2_Research_Note.pdf", "run_mission_2.py",
+    ))
+    if all(path.is_file() for path in archived):
+        return archived
+    raise FileNotFoundError(f"Exploratory analysis requires a complete results, note, and script set in {directory}.")
+
+
 def main():
     directory = Path(__file__).resolve().parent
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--workbook", type=Path, default=directory.parent / "Final" / "Master_Dataset_2018_2025.xlsx")
-    parser.add_argument("--mission2-dir", type=Path, default=directory.parent / "Mission_2")
+    parser.add_argument("--workbook", type=Path, default=directory.parents[1] / "data" / "Master_Dataset_2018_2025.xlsx")
+    parser.add_argument("--exploratory-analysis-dir", type=Path, default=directory.parent / "exploratory_analysis")
+    parser.add_argument("--mission2-dir", dest="exploratory_analysis_dir", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--output-dir", type=Path, default=directory)
     args = parser.parse_args()
-    result = analyze(args.workbook, args.mission2_dir / "Mission_2_Results.json",
-                     args.mission2_dir / "Mission_2_Research_Note.pdf", args.mission2_dir / "run_mission_2.py")
-    print("PASS | Both Mission 2 controlled models replicate to within the signed-off tolerance.")
+    result = analyze(args.workbook, *exploratory_inputs(args.exploratory_analysis_dir))
+    print("PASS | Both exploratory controlled models replicate to within the signed-off tolerance.")
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    json_path = args.output_dir / "mission3_results.json"
-    pdf_path = args.output_dir / "Mission_3_Research_Note.pdf"
-    excel_path = args.output_dir / "Mission_3_Final_Tables.xlsx"
+    json_path = args.output_dir / "robustness_and_diagnostics_results.json"
+    pdf_path = args.output_dir / "robustness_and_diagnostics_research_note.pdf"
+    excel_path = args.output_dir / "robustness_and_diagnostics_tables.xlsx"
     json_path.write_text(json.dumps(result, indent=2, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf-8")
     write_pdf(result, pdf_path)
     write_workbook(result, excel_path)

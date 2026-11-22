@@ -27,19 +27,19 @@ def run_python(script, *args, cwd):
 
 
 def recreate_master(raw_dir, run_dir):
-    """Stage only the seven expected inputs and the unmodified Mission 1 scripts."""
+    """Stage only the seven expected inputs and the unmodified data preparation scripts."""
     files = [raw_dir / name for name in RAW_FILES]
     missing = [str(file) for file in files if not file.is_file()]
     if missing:
         raise FileNotFoundError("Required private inputs are missing:\n" + "\n".join(missing))
-    mission1_dir = run_dir / "mission1"
-    raw_stage = mission1_dir / "Raw"
+    preparation_dir = run_dir / "data_preparation"
+    raw_stage = preparation_dir / "Raw"
     raw_stage.mkdir(parents=True)
     for file in files:
         shutil.copyfile(file, raw_stage / file.name)
-    shutil.copytree(CODE / "mission1", mission1_dir / "Code", ignore=shutil.ignore_patterns("__pycache__"))
-    run_python(mission1_dir / "Code" / "run_all.py", cwd=mission1_dir)
-    return mission1_dir / "Final" / MASTER
+    shutil.copytree(CODE / "data_preparation", preparation_dir / "Code", ignore=shutil.ignore_patterns("__pycache__"))
+    run_python(preparation_dir / "Code" / "run_all.py", cwd=preparation_dir)
+    return preparation_dir / "Final" / MASTER
 
 
 def reproduce(workbook, raw_dir, output_dir):
@@ -51,19 +51,19 @@ def reproduce(workbook, raw_dir, output_dir):
     if workbook is None:
         workbook = recreate_master(raw_dir, run_dir)
 
-    mission2_dir = run_dir / "mission2"
-    mission2_dir.mkdir()
-    # Mission 3 fingerprints the exact Mission 2 script and both generated files.
-    mission2_script = mission2_dir / "run_mission_2.py"
-    shutil.copyfile(CODE / "mission2" / mission2_script.name, mission2_script)
-    run_python(mission2_script, "--input", workbook, "--output-dir", mission2_dir, cwd=mission2_dir)
+    exploratory_dir = run_dir / "exploratory_analysis"
+    exploratory_dir.mkdir()
+    # robustness and diagnostics fingerprints the exact exploratory analysis script and both generated files.
+    exploratory_script = exploratory_dir / "run_exploratory_analysis.py"
+    shutil.copyfile(CODE / "exploratory_analysis" / exploratory_script.name, exploratory_script)
+    run_python(exploratory_script, "--input", workbook, "--output-dir", exploratory_dir, cwd=exploratory_dir)
 
-    mission3_dir = run_dir / "mission3"
+    robustness_dir = run_dir / "robustness_and_diagnostics"
     run_python(
-        CODE / "mission3" / "mission3_analysis.py",
+        CODE / "robustness_and_diagnostics" / "run_robustness_and_diagnostics.py",
         "--workbook", workbook,
-        "--mission2-dir", mission2_dir,
-        "--output-dir", mission3_dir,
+        "--exploratory-analysis-dir", exploratory_dir,
+        "--output-dir", robustness_dir,
         cwd=run_dir,
     )
     print(f"PASS replication pipeline. Private results are in {run_dir}.", flush=True)

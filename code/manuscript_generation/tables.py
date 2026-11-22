@@ -1,4 +1,4 @@
-"""Format manuscript tables directly from the archived Mission 2 and 3 results."""
+"""Format manuscript tables directly from archived exploratory and robustness results."""
 
 
 FIRMS = ("MMC", "Steppe Gold")

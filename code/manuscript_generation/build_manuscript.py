@@ -45,6 +45,18 @@ FORMULA = [
 ]
 
 
+def result_paths(evidence):
+    current = (evidence / "exploratory_analysis_results.json",
+               evidence / "robustness_and_diagnostics_results.json")
+    if all(path.is_file() for path in current):
+        return current
+    # Support the earlier private archive without renaming it or mixing evidence sets.
+    archived = (evidence / "Mission_2_Results.json", evidence / "mission3_results.json")
+    if all(path.is_file() for path in archived):
+        return archived
+    raise FileNotFoundError(f"Provide a complete exploratory and robustness result pair in {evidence}.")
+
+
 def load_content(source=SOURCE):
     bibliography = json.loads((source / "bibliography.json").read_text(encoding="utf-8"))
     index = {entry["key"]: entry for entry in bibliography}
@@ -62,12 +74,12 @@ def load_content(source=SOURCE):
     manuscript = CITE.sub(cite, manuscript)
     if used != set(index):
         raise ValueError(f"Reference mismatch: {sorted(set(index) ^ used)}")
-    evidence = source / "Evidence"
-    m2 = json.loads((evidence / "Mission_2_Results.json").read_text(encoding="utf-8"))
-    m3 = json.loads((evidence / "mission3_results.json").read_text(encoding="utf-8"))
-    if m2["input_sha256"] != m3["inputs_sha256"]["Master_Dataset_2018_2025.xlsx"]:
-        raise ValueError("Mission results do not identify the same master workbook.")
-    tables = make_tables(m2, m3)
+    exploratory_path, robustness_path = result_paths(source / "Evidence")
+    exploratory = json.loads(exploratory_path.read_text(encoding="utf-8"))
+    robustness = json.loads(robustness_path.read_text(encoding="utf-8"))
+    if exploratory["input_sha256"] != robustness["inputs_sha256"]["Master_Dataset_2018_2025.xlsx"]:
+        raise ValueError("Exploratory and robustness results do not identify the same master workbook.")
+    tables = make_tables(exploratory, robustness)
     blocks = []
     for text in manuscript.strip().split("\n\n"):
         text = " ".join(text.splitlines()).strip()

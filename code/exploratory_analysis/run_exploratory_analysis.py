@@ -1,6 +1,6 @@
-"""Reproduce Mission 2 from the Mission 1 master workbook.
+"""Reproduce exploratory analysis from the data preparation master workbook.
 
-Usage: python run_mission_2.py [--input PATH] [--output-dir PATH]
+Usage: python run_exploratory_analysis.py [--input PATH] [--output-dir PATH]
 Packages: NumPy, pandas, openpyxl, ReportLab. No network access needed.
 """
 
@@ -308,7 +308,7 @@ def create_report(path, results):
           f"{st['estimate']:+.2f} for Steppe Gold, in monthly log-return points per 1°C. "
           "Both 95% confidence intervals span zero. Neither joint climate test rejects at 5%."),
         p("Data and estimation samples", "heading"),
-        p("The 96-month Mission 1 master supplies local-currency stock returns, index price returns, "
+        p("The 96-month data preparation master supplies local-currency stock returns, index price returns, "
           "nominal USD commodity returns, and Open-Meteo grid-based reanalysis anomalies. "
           "MMC is paired with Ukhaa Khudag (UHG), the Hang Seng Index, and Australian thermal coal. "
           "Steppe Gold is paired with Altan Tsagaan Ovoo (ATO), the S&amp;P/TSX Composite, and gold. "
@@ -352,7 +352,7 @@ def create_report(path, results):
           "Australian thermal coal is an imperfect proxy for coking coal, "
           "and ATO represents one site in Steppe Gold's expanded portfolio after the 2024 Boroo acquisition."),
         p("Source and reproducibility", "heading"),
-        p("Mission 1 master workbook, Master sheet. The accompanying Python script and JSON provide "
+        p("data preparation master workbook, Master sheet. The accompanying Python script and JSON provide "
           "input fingerprint, exact estimates, standard errors, p-values, diagnostics, and month membership. "
           "Inference reference: Newey, W. K. and West, K. D. (1987). "
           "<i>Econometrica</i> 55(3), 703-708. "
@@ -361,21 +361,21 @@ def create_report(path, results):
     document = SimpleDocTemplate(str(path), pagesize=letter, topMargin=48, bottomMargin=53,
                                  leftMargin=52, rightMargin=52,
                                  title="Monthly climate anomalies and mining stock returns",
-                                 subject="Mission 2 exploratory results")
+                                 subject="exploratory analysis exploratory results")
     document.build(story, onFirstPage=footer, onLaterPages=footer)
 
 
 def main():
     directory = Path(__file__).resolve().parent
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=directory.parent / "Final" / "Master_Dataset_2018_2025.xlsx")
+    parser.add_argument("--input", type=Path, default=directory.parents[1] / "data" / "Master_Dataset_2018_2025.xlsx")
     parser.add_argument("--output-dir", type=Path, default=directory)
     arguments = parser.parse_args()
     arguments.output_dir.mkdir(parents=True, exist_ok=True)
     results = collect(arguments.input)
-    path = arguments.output_dir / "Mission_2_Results.json"
+    path = arguments.output_dir / "exploratory_analysis_results.json"
     path.write_text(json.dumps(results, indent=2, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf-8")
-    report = arguments.output_dir / "Mission_2_Research_Note.pdf"
+    report = arguments.output_dir / "exploratory_analysis_research_note.pdf"
     create_report(report, results)
     print(f"Validated workbook and wrote {path.name} and {report.name} in {arguments.output_dir}")
 
