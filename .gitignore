@@ -1,0 +1,12 @@
+/data/
+/replication/
+/.venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+*.pdf
+*.docx
+*.xlsx
+*.csv
+*.json
